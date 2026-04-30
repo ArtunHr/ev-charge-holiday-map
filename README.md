@@ -1,11 +1,29 @@
-<div align="center">
+# EV Charge Holiday Map
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Konya’dan Belek’e giden tatil rotası için hazırlanmış statik elektrikli araç şarj istasyonu haritası.
 
-  <h1>Built with AI Studio</h2>
+## Özellikler
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+- Konya → Belek sabit rota
+- Leaflet ve OpenStreetMap tabanlı harita
+- Statik şarj istasyonu verileri
+- Rota üzerindeki istasyon listesi
+- İstasyon detayları
+- Filtreleme seçenekleri
+- Yol için şarkı listesi
+- API key gerektirmez
+- Google Maps API veya ücretli servis kullanmaz
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Teknolojiler
 
-</div>
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Leaflet
+- React Leaflet
+- OpenStreetMap
+
+## Not
+
+Bu proje MVP sürümüdür. Şarj istasyonu verileri statiktir. Yola çıkmadan önce istasyon konumu, uygunluk durumu ve soket bilgileri operatör uygulaması veya harita üzerinden doğrulanmalıdır.
