@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import "leaflet/dist/leaflet.css";
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-dash-bg: #050B12;
+  --color-dash-bg-sec: #07111B;
+  --color-dash-bg-ter: #0A1622;
+  
+  --color-dash-panel: rgba(10, 22, 34, 0.82);
+  --color-dash-panel-hover: rgba(15, 30, 45, 0.88);
+  
+  --color-dash-border: rgba(114, 211, 255, 0.22);
+  --color-dash-border-hover: rgba(120, 220, 255, 0.4);
+  
+  --color-dash-accent: #4FD8FF;
+  --color-dash-accent-sec: #31CFFF;
+  --color-dash-amber: #FFB347;
+  --color-dash-green: #22c55e;
+  
+  --color-dash-text-pri: #F8FAFC;
+  --color-dash-text-sec: #CBD5E1;
+  --color-dash-text-ter: #94A3B8;
+}
+
+@layer base {
+  body {
+    @apply bg-[var(--color-dash-bg)] text-[var(--color-dash-text-pri)] font-sans antialiased selection:bg-[var(--color-dash-accent)] selection:text-[#050B12];
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-[var(--color-dash-panel)] backdrop-blur-xl border border-[var(--color-dash-border)] shadow-[0_4px_30px_rgba(0,0,0,0.3)];
+  }
+  
+  .dashboard-card {
+    @apply bg-[var(--color-dash-panel)] backdrop-blur-xl border border-[var(--color-dash-border)] shadow-[0_4px_30px_rgba(0,0,0,0.3)] rounded-2xl transition-all duration-300;
+  }
+  
+  .dashboard-card:hover {
+    @apply bg-[var(--color-dash-panel-hover)] border-[var(--color-dash-border-hover)] shadow-[0_0_15px_rgba(79,216,255,0.1)];
+  }
+
+  .neon-text {
+    @apply text-[var(--color-dash-accent)] drop-shadow-[0_0_8px_rgba(79,216,255,0.6)];
+  }
+  
+  .system-label {
+    @apply text-[9px] uppercase tracking-[0.25em] font-bold text-[var(--color-dash-text-ter)] block;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--color-dash-border);
+    border-radius: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-dash-accent);
+  }
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-dash-border) transparent;
+  }
+}

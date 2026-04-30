@@ -1,0 +1,6 @@
+{
+  "name": "RouteCharge Turkey",
+  "description": "EV Charging Station finder along routes in Turkey.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": []
+}
