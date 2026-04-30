@@ -11,6 +11,7 @@ export interface Station {
   chargingSpeedKw: number;
   isFastCharging: boolean;
   distanceFromRouteKm: number;
+  distanceFromStartKm?: number;
   notes?: string;
   navigationUrl: string;
   imageUrl?: string;

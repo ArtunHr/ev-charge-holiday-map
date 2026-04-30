@@ -35,7 +35,7 @@ export function TripSummary({ totalDistanceKm, totalStations, fastStations }: Pr
             <span className="text-[9px] uppercase tracking-wider font-bold">Süre (Tahmini)</span>
           </div>
           <p className="text-xl font-bold text-[var(--color-dash-text-pri)] tracking-tight">
-            3 <span className="text-[10px] font-semibold text-[var(--color-dash-text-ter)] uppercase">sa</span> 45 <span className="text-[10px] font-semibold text-[var(--color-dash-text-ter)] uppercase">dk</span>
+            3 <span className="text-[10px] font-semibold text-[var(--color-dash-text-ter)] uppercase">sa</span> 29 <span className="text-[10px] font-semibold text-[var(--color-dash-text-ter)] uppercase">dk</span>
           </p>
         </div>
 

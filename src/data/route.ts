@@ -10,5 +10,12 @@ export const STATIC_ROUTE: [number, number][] = [
   [36.8601, 31.0094],   // Innvista Hotels Belek
 ];
 
+export const routeInfo = {
+  origin: "Konya",
+  destination: "Belek",
+  totalDistanceKm: 264,
+  estimatedDuration: "3 sa 29 dk"
+};
+
 export const ROUTE_START = STATIC_ROUTE[0];
 export const ROUTE_END = STATIC_ROUTE[STATIC_ROUTE.length - 1];

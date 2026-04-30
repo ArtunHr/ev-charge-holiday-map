@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -10,6 +11,15 @@ const customMapStyles = `
   .leaflet-container {
     background: #050B12;
     font-family: var(--font-sans);
+  }
+  .leaflet-control-container {
+    z-index: 40 !important;
+  }
+  .leaflet-popup-pane {
+    z-index: 50 !important;
+  }
+  .dark-popup {
+    z-index: 50 !important;
   }
   .dark-popup .leaflet-popup-content-wrapper {
     background: rgba(10, 22, 34, 0.95);
@@ -69,20 +79,36 @@ function MapUpdater({ selectedStationId, stations }: { selectedStationId?: strin
   return null;
 }
 
+function MapOverlay({ children }: { children: React.ReactNode }) {
+  const map = useMap();
+  const mapPane = map.getContainer().querySelector('.leaflet-map-pane');
+  if (!mapPane) return null;
+  // Make sure it doesn't move with pan! No wait, leaflet-map-pane MOVES with pan!
+  // If we don't want it to move, we can't put it here.
+  return ReactDOM.createPortal(
+    <div style={{ position: 'absolute', zIndex: 650, pointerEvents: 'none' }}>
+      {/* We need to negate the current transform of the map pane? */}
+      {/* Leaflet handles custom panes without moving by putting them OUTSIDE? No, all panes move. */}
+      {children}
+    </div>,
+    mapPane
+  );
+}
+
 export function MapView({ routePath, stations, selectedStationId, onSelectStation }: Props) {
   const defaultCenter: [number, number] = [37.6, 31.7];
 
   return (
-    <div className="w-full h-full relative z-0 bg-[var(--color-dash-bg)]">
+    <div className="w-full h-full relative bg-[var(--color-dash-bg)]">
       <style>{customMapStyles}</style>
       
       {/* HUD Frame Overlay */}
-      <div className="absolute inset-0 pointer-events-none z-[400] shadow-[inset_0_0_100px_rgba(5,11,18,0.9)]"></div>
+      <div className="absolute inset-0 pointer-events-none z-[10] shadow-[inset_0_0_100px_rgba(5,11,18,0.9)]"></div>
       
       {/* Corner crosshairs top-left */}
-      <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-[var(--color-dash-accent)]/30 z-[500] pointer-events-none rounded-tl-lg"></div>
+      <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-[var(--color-dash-accent)]/30 z-[20] pointer-events-none rounded-tl-lg"></div>
       
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[500] pointer-events-none">
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[30] pointer-events-none">
          <div className="glass-panel text-[var(--color-dash-text-pri)] px-4 py-2 rounded-full flex gap-2 items-center pointer-events-auto border-t-2 border-[var(--color-dash-amber)]/80 shadow-[0_4px_30px_rgba(255,179,71,0.15)]">
             <AlertTriangle className="w-4 h-4 text-[var(--color-dash-amber)] shrink-0" />
             <p className="text-[10px] uppercase font-bold tracking-widest text-[var(--color-dash-text-sec)]">
@@ -130,7 +156,7 @@ export function MapView({ routePath, stations, selectedStationId, onSelectStatio
               click: () => onSelectStation(station),
             }}
           >
-            <Popup onClose={() => onSelectStation(null)} className="dark-popup">
+            <Popup onClose={() => onSelectStation(null)} className="dark-popup !z-[50]">
               <div className="p-1 min-w-[240px] max-w-[280px] font-sans">
                  {station.imageUrl && (
                    <div className="relative mb-3 rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.5)] border border-[var(--color-dash-border)] bg-[var(--color-dash-bg-ter)] flex items-center justify-center min-h-[110px]">
@@ -172,6 +198,18 @@ export function MapView({ routePath, stations, selectedStationId, onSelectStatio
                        {c}
                      </span>
                    ))}
+                 </div>
+                 
+                 <div className="flex justify-between items-center bg-black/40 p-2 rounded border border-[var(--color-dash-border)]/50 mb-3">
+                   <div className="flex flex-col">
+                      <span className="text-[8px] text-[var(--color-dash-text-ter)] uppercase tracking-wider">Konya'dan</span>
+                      <span className="text-[11px] font-bold text-[var(--color-dash-accent)]">{station.distanceFromStartKm} km</span>
+                   </div>
+                   <div className="w-[1px] h-6 bg-[var(--color-dash-border)]/50"></div>
+                   <div className="flex flex-col items-end">
+                      <span className="text-[8px] text-[var(--color-dash-text-ter)] uppercase tracking-wider">Rotadan Sapma</span>
+                      <span className="text-[11px] font-bold text-[var(--color-dash-text-pri)]">{station.distanceFromRouteKm} km</span>
+                   </div>
                  </div>
                  
                  {station.notes && (

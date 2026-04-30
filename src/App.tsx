@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { MapView } from './components/MapView';
-import { STATIC_ROUTE } from './data/route';
+import { STATIC_ROUTE, routeInfo } from './data/route';
 import { STATIC_STATIONS as STATIONS } from './data/stations';
 import { RouteFilters, Station } from './types';
-import { calculateRouteDistance } from './lib/geo';
+import { getDistanceToStationAlongRoute } from './lib/geo';
 
 export default function App() {
   const [filters, setFilters] = useState<RouteFilters>({
@@ -22,17 +22,22 @@ export default function App() {
   }, []);
 
   // Calculate metrics
-  const totalDistanceKm = useMemo(() => calculateRouteDistance(STATIC_ROUTE), []);
+  const totalDistanceKm = routeInfo.totalDistanceKm;
   const fastStations = useMemo(() => STATIONS.filter(s => s.isFastCharging).length, []);
 
-  // Filter stations based on state
+  // Filter stations based on state and calculate distances
   const filteredStations = useMemo(() => {
-    return STATIONS.filter(station => {
+    const list = STATIONS.filter(station => {
        if (station.distanceFromRouteKm > filters.maxDistanceKm) return false;
        if (filters.isFastChargingOnly && !station.isFastCharging) return false;
        if (filters.connectorType && !station.connectorTypes.includes(filters.connectorType)) return false;
        return true;
     });
+
+    return list.map(station => ({
+      ...station,
+      distanceFromStartKm: getDistanceToStationAlongRoute(station.latitude, station.longitude, STATIC_ROUTE)
+    })).sort((a, b) => (a.distanceFromStartKm || 0) - (b.distanceFromStartKm || 0)); // Sort by route progress
   }, [filters]);
 
   const handleSelectStation = (station: Station | null) => {
@@ -52,7 +57,7 @@ export default function App() {
         selectedStationId={selectedStationId}
         setSelectedStation={handleSelectStation}
       />
-      <main className="flex-1 relative h-[50vh] md:h-full shrink-0 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-0">
+      <main className="flex-1 relative h-[50vh] md:h-full shrink-0 shadow-[-10px_0_30px_rgba(0,0,0,0.5)]">
         <MapView 
           routePath={STATIC_ROUTE} 
           stations={filteredStations} 

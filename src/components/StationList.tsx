@@ -89,7 +89,10 @@ export function StationList({ stations, selectedStationId, onStationClick }: Pro
                           <span key={c} className="text-[var(--color-dash-text-ter)] bg-black/20 px-1.5 py-0.5 rounded border border-[var(--color-dash-border)]/50 uppercase tracking-widest">{c}</span>
                        ))}
                      </div>
-                     <span className="text-[var(--color-dash-text-ter)] bg-black/20 px-1.5 py-0.5 rounded border border-[var(--color-dash-border)]/50 uppercase tracking-widest">{station.distanceFromRouteKm} km Sapa</span>
+                     <div className="flex flex-col items-end gap-1">
+                        <span className="text-[var(--color-dash-accent)] bg-black/20 px-1.5 py-0.5 rounded border border-[var(--color-dash-accent)]/30 uppercase tracking-widest text-[9.5px]">Konya'dan: {station.distanceFromStartKm} km</span>
+                        <span className="text-[var(--color-dash-text-ter)] bg-black/20 px-1.5 py-0.5 rounded border border-[var(--color-dash-border)]/50 uppercase tracking-widest text-[8.5px]">Sapma: {station.distanceFromRouteKm} km</span>
+                     </div>
                    </div>
                </div>
             </div>
