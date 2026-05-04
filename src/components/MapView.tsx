@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Station } from '../types';
-import { AlertTriangle, MapPin, Zap } from 'lucide-react';
+import { AlertTriangle, MapPin, Zap, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const customMapStyles = `
@@ -13,13 +13,13 @@ const customMapStyles = `
     font-family: var(--font-sans);
   }
   .leaflet-control-container {
-    z-index: 40 !important;
+    z-index: 400 !important; /* Allow custom HUD to be above standard controls if needed, or vice-versa */
   }
   .leaflet-popup-pane {
-    z-index: 50 !important;
+    z-index: 1000 !important; /* Put popup completely above everything */
   }
   .dark-popup {
-    z-index: 50 !important;
+    /* removed override */
   }
   .dark-popup .leaflet-popup-content-wrapper {
     background: rgba(10, 22, 34, 0.95);
@@ -72,36 +72,61 @@ function MapUpdater({ selectedStationId, stations }: { selectedStationId?: strin
     if (selectedStationId) {
       const station = stations.find(s => s.id === selectedStationId);
       if (station) {
-        map.setView([station.latitude, station.longitude], 13, { animate: true });
+        map.panTo([station.latitude, station.longitude], { animate: true });
       }
     }
   }, [selectedStationId, stations, map]);
   return null;
 }
 
-function MapOverlay({ children }: { children: React.ReactNode }) {
-  const map = useMap();
-  const mapPane = map.getContainer().querySelector('.leaflet-map-pane');
-  if (!mapPane) return null;
-  // Make sure it doesn't move with pan! No wait, leaflet-map-pane MOVES with pan!
-  // If we don't want it to move, we can't put it here.
-  return ReactDOM.createPortal(
-    <div style={{ position: 'absolute', zIndex: 650, pointerEvents: 'none' }}>
-      {/* We need to negate the current transform of the map pane? */}
-      {/* Leaflet handles custom panes without moving by putting them OUTSIDE? No, all panes move. */}
-      {children}
-    </div>,
-    mapPane
-  );
-}
-
 export function MapView({ routePath, stations, selectedStationId, onSelectStation }: Props) {
   const defaultCenter: [number, number] = [37.6, 31.7];
 
+  const clickCounts = useRef<Record<string, number>>({});
+  const [showZesAd, setShowZesAd] = useState(false);
+
+  const handleMarkerClick = (station: Station) => {
+    onSelectStation(station);
+    const count = (clickCounts.current[station.id] || 0) + 1;
+    clickCounts.current[station.id] = count;
+    if (count === 3) {
+      setShowZesAd(true);
+      setTimeout(() => {
+        setShowZesAd(false);
+        clickCounts.current[station.id] = 0;
+      }, 10000);
+    }
+  };
+
   return (
     <div className="w-full h-full relative bg-[var(--color-dash-bg)]">
+      {/* ZES Ad Overlay */}
+      {showZesAd && (
+        <div className="absolute inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity">
+           <div className="relative bg-[var(--color-dash-bg-ter)] border border-[var(--color-dash-border)] rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(79,216,255,0.3)] max-w-sm w-full p-6 text-center animate-in fade-in zoom-in duration-300">
+             <button 
+               onClick={() => {
+                 setShowZesAd(false);
+                 Object.keys(clickCounts.current).forEach(key => clickCounts.current[key] = 0);
+               }} 
+               className="absolute top-3 right-3 text-white/50 hover:text-white transition-colors"
+             >
+               <X className="w-5 h-5" />
+             </button>
+             <img src="/zes.png" alt="ZES İstasyonları" className="w-full h-32 object-contain mb-6 drop-shadow-xl" />
+             <h2 className="text-xl font-bold text-[var(--color-dash-text-pri)] mb-3 uppercase tracking-wide">Alternatif Arıyorsanız!</h2>
+             <p className="text-[var(--color-dash-accent)] text-sm mb-6 leading-relaxed">
+               ZES istasyonlarında da hızlı ve güvenilir şarj deneyimini yaşayabilirsiniz. Yolculuğunuza kesintisiz devam edin!
+             </p>
+             <div className="text-[10px] text-[var(--color-dash-text-ter)] uppercase tracking-widest bg-black/30 py-2 rounded-lg border border-[var(--color-dash-border)]/50">
+               Bu mesaj 10 saniye içinde kapanacaktır
+             </div>
+           </div>
+        </div>
+      )}
+
       <style>{customMapStyles}</style>
-      
+
       {/* HUD Frame Overlay */}
       <div className="absolute inset-0 pointer-events-none z-[10] shadow-[inset_0_0_100px_rgba(5,11,18,0.9)]"></div>
       
@@ -153,22 +178,21 @@ export function MapView({ routePath, stations, selectedStationId, onSelectStatio
             position={[station.latitude, station.longitude]}
             icon={selectedStationId === station.id ? selectedIcon : (station.isFastCharging ? fastIcon : normalIcon)}
             eventHandlers={{
-              click: () => onSelectStation(station),
+              click: () => handleMarkerClick(station),
             }}
           >
-            <Popup onClose={() => onSelectStation(null)} className="dark-popup !z-[50]">
-              <div className="p-1 min-w-[240px] max-w-[280px] font-sans">
+            <Popup onClose={() => onSelectStation(null)} className="dark-popup" maxWidth={240} minWidth={180} autoPanPaddingTopLeft={[0, 80]}>
+               <div className="p-1 w-[220px] font-sans">
                  {station.imageUrl && (
-                   <div className="relative mb-3 rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.5)] border border-[var(--color-dash-border)] bg-[var(--color-dash-bg-ter)] flex items-center justify-center min-h-[110px]">
-                       <Zap className={cn("absolute w-8 h-8 z-0", station.isFastCharging ? "text-[var(--color-dash-amber)]" : "text-[var(--color-dash-text-ter)]")} />
+                   <div className="relative mb-2 rounded-xl overflow-hidden shadow-[0_4px_10px_rgba(0,0,0,0.5)] border border-[var(--color-dash-border)] bg-[var(--color-dash-bg-ter)] flex items-center justify-center h-[90px]">
+                       <Zap className={cn("absolute w-5 h-5 z-0 opacity-20", station.isFastCharging ? "text-[var(--color-dash-amber)]" : "text-[var(--color-dash-text-ter)]")} />
                        <img 
                          src={station.imageUrl} 
                          alt={station.name} 
-                         className="w-full h-28 object-cover opacity-80 relative z-10" 
+                         className="w-full h-full object-contain p-3 relative z-10 bg-[var(--color-dash-bg)]" 
                          referrerPolicy="no-referrer"
                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
                        />
-                       <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-dash-bg-ter)] to-transparent z-20 pointer-events-none"></div>
                    </div>
                  )}
                  <div className="flex justify-between items-start mb-2 gap-2">
@@ -213,9 +237,9 @@ export function MapView({ routePath, stations, selectedStationId, onSelectStatio
                  </div>
                  
                  {station.notes && (
-                   <div className="mb-3 px-2 py-2 bg-black/30 rounded border border-[var(--color-dash-border)]/30">
-                     <p className="text-[10px] text-[var(--color-dash-text-ter)] font-medium leading-snug">
-                       <span className="text-[var(--color-dash-accent)] mr-1">NOTE:</span> {station.notes}
+                   <div className="mb-2 px-2 py-1.5 bg-black/30 rounded border border-[var(--color-dash-border)]/30">
+                     <p className="text-[9px] text-[var(--color-dash-text-sec)] font-medium leading-[1.3]">
+                       <span className="text-[var(--color-dash-accent)] mr-1">SYS:</span> {station.notes}
                      </p>
                    </div>
                  )}
